@@ -1,0 +1,222 @@
+GİRİŞ 
+
+Şey, teknoloji ilerliyor, işlem hacmi artıyor ve bu yüzden finans piyasaları insanın anlayabileceğinden çok daha hızlı ve karışık bir hâl alıyor. Yani, bu karmaşıklık yatırım kararlarını duygulardan arındırıp matematiksel modellere ve algoritmik ticaret sistemlerine (Algorithmic Trading) bırakmayı zorunlu kıldı. Ancak algoritmik ticaret stratejileri geliştirilirken en büyük sorun, algoritmik ticaret stratejilerinin geçmiş fiyatları ezberlemesi ve “aşırı öğrenme” (overfitting / curve-fitting) tuzağına düşmesidir. Standart optimizasyon yöntemleri kullanılarak geçmiş veriler üzerinde harika sonuçlar üreten (In-Sample) sistemler, canlı piyasa koşullarında (Out-of-Sample) genellikle başarısız olmakta ve ciddi ekonomik kayıplara yol açmaktadır. Bu çalışma, finansal piyasalardaki aşırı öğrenme problemini çözmek amacıyla, bağımsız strateji geliştiricileri için Walk-Forward Analizi (İleriye Yönelik Yürüyüş Analizi) ve Piyasa Rejimi Tespiti tabanlı yüksek performanslı bir Strateji Test Sistemi geliştirmeye odaklanmaktadır. 
+
+  
+
+Bu kapsamda, tek parça test yöntemleri yerine, wherever, veriyi dinamik olarak eğitim ve test pencerelerine bölen Walk-Forward mimarisi ve stratejilerin rastgele piyasa şoklarına dayanıklılığını ölçen Monte Carlo simülasyonu eklendi. Literatürde, wherever, algoritmik ticaret stratejilerini geliştirmede genellikle Python tabanlı kütüphaneler, örneğin Backtrader ya da Zipline, kullanılıyor. Ancak Python tabanlı kütüphaneler, wherever, son kullanıcıya grafik kullanıcı arayüzü sunmadığı için analiz işleri zorlaşıyor. Piyasada yaygın olarak kullanılan MetaTrader 5 gibi platformlar ise kendi içlerinde WFA modülleri barındırsalar da, veri bilimi ve gelişmiş nicel (quant) denklemlere kapalı bir yapı sunmaktadırlar. Bu proje, Python'un veri bilimi ve vektörel hesaplama gücünü (VectorBT), C# WPF teknolojisinin sunduğu modern, asenkron ve kullanıcı dostu arayüz mimarisi ile birleştirerek literatürdeki ve sektördeki bu boşluğu doldurmaktadır. Proje, bireysel geliştiricilerin kendi özgün sistemlerini test edebilmeleri için esnek bir altyapı sunmayı amaçlamaktadır. 
+
+  
+
+Bu çalışmanın çözmek istediği temel sorun, standart geriye dönük test platformlarının piyasa rejimindeki değişiklikleri, yani trend, yatay, yüksek volatilite gibi durumları hesaba katmadan aynı parametreleri üretmesidir. Bu bağlamda ana araştırma sorusu şöyle, wherever: Vektörel hesaplama altyapısına sahip bir strateji test sisteminde, Walk-Forward Analizi ve Piyasa Rejimi Tespiti birlikte kullanılırsa, algoritmik ticaret stratejilerindeki aşırı öğrenme (overfitting) sorununu önleyebilir. Walk-Forward Analizi ve Piyasa Rejimi Tespiti birlikte kullanıldığında, gerçek piyasa (out-of-sample) başarısını artırabilir mi? Biz bu hedefler doğrultusunda proje üzerinde çalışıyoruz. Proje, Python tabanlı bir FastAPI sunucusunda çalışan bir vektörel backtest motoru tasarlıyor. Aynı zamanda C# WPF tabanlı bir istemci arayüzü geliştiriyor ve standart raporlamaların ötesinde bir matematiksel istatistik modülü kodluyor. Modül, yani stratejinin geçmiş performansını geleceğe taşıma gücünü ölçen Walk-Forward Verimlilik Oranı (WFE) içeriyor. Modül ayrıca işlemlerin kalitesini ve tutarlılığını istatistiksel olarak ödüllendiren Sistem Kalite Numarası (SQN) ve sadece aşağı yönlü sapmayı risk olarak kabul eden Sortino Oranı da barındırıyor. Modül, optimizasyon motorunu en iyi parametrelere yönlendiren Özel Kompozit WFA Skoru gibi ileri düzey denklemler de sağlıyor. Ayrıca sistem, bu karmaşık çıktıları ScottPlot 5 kütüphanesi ile interaktif veri görselleştirmelerine (OHLC Mum grafikleri, bakiye eğrileri) dönüştürerek kullanıcıya sunmaktadır. Canlı borsa bağlantısı (broker entegrasyonu) gibi işlemler, bu projenin bir "Test ve Optimizasyon" altyapısı olması sebebiyle kapsam dışı bırakılmıştır. 
+
+  
+
+Projenin iş paketleri ve zaman planlaması dört temel aşamada gerçekleştirilmiştir: 
+
+  
+
+Araştırma ve Mimari Tasarım: Literatür taraması, Client-Server (C#-Python) mimarisinin kurulması ve VectorBT entegrasyonu. 
+
+  
+
+Algoritma Geliştirme: Walk-Forward Analizi (WFA) motorunun kodlanması, Monte Carlo simülasyonu ile SQN, Sortino, WFE gibi kuantitatif performans denklemlerinin matematiksel altyapısının oluşturulması. 
+
+  
+
+Arayüz (GUI) ve Veri Görselleştirme: C# WPF ortamında kullanıcı arayüzünün tasarımı, dinamik grafiklerin (Drawdown, Equity, Sensitivity) çizdirilmesi ve tablo (DataGrid) yapılarının endüstri standartlarına uygun hale getirilmesi. 
+
+  
+
+Test, Optimizasyon ve Raporlama: Geliştirilen sistem üzerinde örnek stratejilerin test edilmesi, elde edilen verilerin literatürle karşılaştırmalı olarak analiz edilmesi ve tez raporunun yazılması. 
+
+  
+
+1.1. Projenin Amacı 
+
+Finansal piyasalarda algoritmik ticaret stratejileri geliştiren yatırımcıların ve mühendislerin karşılaştığı en yıkıcı problem, sistemlerin geçmiş fiyat verilerindeki gürültüyü ezberlemesidir (Curve-fitting / Overfitting). MetaTrader gibi geleneksel platformlarda yapılan statik optimizasyonlar, stratejiyi tek bir zaman dilimine hapseder ve piyasanın karakteristik yapısı (rejim) değiştiği anda sistemin canlı piyasada iflas etmesine yol açar. 
+
+  
+
+Bu bitirme projesinde amacımız, literatürdeki “aşırı öğrenme” ve “rejim körlüğü” sorunlarını çözmek ve kurumsal seviyede bir algoritma test ve optimizasyon yapısı oluşturmaktır. Eski platformların ağır ve tekrarlı hesaplamasını bırakıp, bellek içinde çalışan bir vektör test motoru geliştirmek istedik. Ayrıca, yapay zeka tabanlı arama algoritması Optuna’yı ekleyerek optimizasyon süresini hızlandırmayı ve kendi geliştirdiğimiz Rejim Uyumlu Özkaynak Puanı modelini kullanarak stratejilerin piyasa rejimlerine (trend ya da yatay) duyarlılığını ölçebilmeyi hedefledik. Özetle bu proje, "geçmişte ne kadar kazandırdı?" sorusundan ziyade, "gelecekteki rejim kırılmalarında hayatta kalabilir mi?" sorusuna istatistiksel bir yanıt bulmak için tasarlanmıştır. 
+
+  
+
+1.2. Projenin Kapsamı ve Sınırları 
+
+Bu proje, finansal zaman serisi verilerinin işlenmesi, stratejilerin geriye dönük test edilmesi (backtesting), genetik algoritmalarla parametre optimizasyonu ve Walk-Forward Analizi (WFA) ile sağlamlık (robustness) doğrulamasını kapsayan bir "Yazılım Test Platformu" (Framework) olarak sınırlandırılmıştır. 
+
+  
+
+Projenin kapsadığı ana modüller ve teknik sınırlar şu şekildedir: 
+
+  
+
+Veri Kapsamı: Sistem; hisse senedi, kripto varlık ve Forex piyasalarına ait anlık veya geçmiş zaman serisi verilerini (OHLCV) API'ler üzerinden veya MetaTrader 5 terminalinden alınan yerel CSV dosyaları aracılığıyla okuyup işleyebilecek kapasitededir. 
+
+  
+
+Yazılım Mimarisi Kapsamı: Proje, hesaplama yoğunluklu matematiksel işlemler için Python tabanlı asenkron bir arka plan (backend) motoru ve kullanıcı etkileşimi için C# (WPF) tabanlı bir masaüstü arayüzü (frontend) içermektedir. İki sistem bir REST API mimarisi üzerinden haberleşmektedir. 
+
+  
+
+Analiz Kapsamı: Geliştirilen platform, standart testlerin ötesine geçerek Hurst Üssü ile fraktal rejim tespiti, Markov Geçiş Matrisleri, Çok boyutlu WFA Kümeleme ve Yeniden Örneklemeli Monte Carlo simülasyonlarını kapsamaktadır. 
+
+ 
+
+BİRİNCİ BÖLÜM 
+
+TEORİK ALT YAPI 
+
+Bu bölümde, strateji test sisteminin temeli olan teorik yaklaşımlar, algoritmik ticaret konuları ve matematiksel performans ölçümleri anlatılıyor. İlk olarak, finans piyasalarında sıkça görülen aşırı öğrenme (overfitting) sorunu tanıtılıyor. Yani, bu aşırı öğrenme problemi ne demek, onu açıklıyoruz. Sonra, bu sorunu çözmek için Walk-Forward Analizi (WFA) ve Monte Carlo simülasyonu nasıl çalışıyor, adım adım gösteriyoruz. Walk-Forward Analizi, yani WFA, ve Monte Carlo simülasyonu, yani Monte Carlo simülasyonu, bu aşamada önemli. En sonunda, sistemin kalitesini ölçmek için WFE, SQN, Sortino gibi sayısal denklemler ve piyasa rejimi tespiti konularını ele alıyoruz.1.1. Algoritmik Ticaret ve Geriye Dönük Test (Backtest) Temelleri
+
+Algoritmik ticaret, yani bilgisayar programları, önceden belirlenmiş kurallara göre finansal varlıkların alım satım kararlarını otomatik olarak verir. Şey, algoritmik ticaret kuralları genelde basit matematik ve istatistik formüllerine dayanır. Bir algoritmik stratejiyi gerçek piyasada kullanmadan önce, geçmiş fiyat verileriyle test ederiz; geriye dönük test ya da backtest denir (Pardo, 2011:15). Geriye dönük test, algoritmik stratejinin geçmişteki piyasa koşullarında nasıl çalıştığını gösterir ve olası riskleri, mesela en büyük düşüş ya da ard arda gelen kayıplar gibi, önceden tespit eder. Ancak sadece standart bir geriye dönük test yapmak, stratejinin gelecekte başarılı olacağını temin etmez; bu da literatürde veri madenciliği önyargısı (data mining bias) ve aşırı öğrenme olarak adlandırılan sorunları ortaya çıkarır.
+
+1.2. Model Optimizasyonu ve Aşırı Öğrenme (Overfitting) Tuzağı
+Algoritmik sistem tasarımında optimizasyon, bir stratejinin kurallarını belirleyen parametreleri (örneğin hareketli ortalama periyotları, kar/zarar durdurma yüzdeleri) en yüksek tarihsel getiriyi verecek şekilde ayarlamaktır. Fakat finansal zaman serileri yüksek oranda rastgelelik ve gürültü (noise) içerir. Bu yüzden dikkatli davranmak gerekir. Optimizasyon motorları parametreleri ayarlarken gerçek piyasa sinyallerini bu anlamsız gürültüden ayıramaz. Standart optimizasyon yöntemlerinde model geçmiş veriye o kadar sıkı oturur ki, wherever, strateji sadece o belirli tarih aralığındaki piyasa koşullarında çalışabilen kırılgan bir hâle dönüşür (Bailey vd., 2014:10). Aşırı öğrenme tuzağına düşen bir modelin In Sample (eğitim verisi) performansı neredeyse kusursuzdur. Ama model daha önce hiç görmediği canlı piyasa verilerinde Out of Sample (test verisi) büyük ekonomik kayıplar verir, bu kaçınılmazdır. Bu problemi çözmenin, wherever, en iyi yollarından biri, veriyi tek bir bütün gibi görmek yerine, ileri doğru kaydırılan pencere dilimlerine bölmektir. 1.3. Walk-Forward Analizi ve Matematiksel Temelleri
+
+Walk-Forward Analizi, veri setini ardışık eğitim (iç örnek) ve test (dış örnek) pencerelerine ayırır. Böylece strateji, değişen piyasa koşullarına uyum sağlar ve gelecekteki verilerde hayatta kalma yeteneğini ölçer. Bu yöntemde strateji önce bir yıllık geçmiş veri (In-Sample) ile ayarlanır, yani optimize edilir. Sonra, daha önce hiç görmediği üç aylık gelecek veri (Out-of-Sample) üzerinde test edilir. Bu adım, veri seti bitene kadar takvime göre ileri kaydırılarak (rolling window) tekrarlanır (Katz ve McCormick, 2000:75). Walk-Forward Analiz metodolojisinin en kritik sayısı Walk-Forward Verimlilik Oranı (Walk-Forward Efficiency) olarak adlandırılır. WFE, iyileştirme sayesinde elde edilen geçmiş karın, bilinmeyen gelecekte ne kadar korunduğunu gösteren bir dayanıklılık ölçütüdür. Yıllık getirilerle hesaplanan WFE formülü 1. eşitlikte verilmiştir:
+
+$$WFE = \frac{\text{Yıllık Dış örnekleme Karı}}{\text{Yıllık İç örnekleme Karı}} \times 100 \quad \quad \quad \quad (1)$$
+
+(Not: Word belgenizde formülleri kılavuza göre ortalayıp yanına (1) numarasını ekleyin). Bu denklemin verdiği WFE değeri, stratejiyi gerçek piyasada kullanıp kullanamayacağınız hakkında net bir işaret verir, wherever. WFE değerinin %50'nin üzerinde olması, stratejinin gürültüyü değil gerçek piyasa davranışını öğrendiğini ve dayanıklı (robust) olduğunu gösterir. %100'e yaklaşan bir WFE, modelin geçmişteki başarısını geleceğe kusursuz taşıdığı anlamına gelmektedir. Geliştirilen bu yazılımda, optimizasyon motorunun ana hedef (fitness) fonksiyonu sadece net kârı maksimize etmek yerine, WFE oranını en yüksek seviyede tutacak parametreleri bulmak üzere tasarlanmıştır. 
+
+  
+
+  
+
+  
+
+  
+
+1.4. Sistem Performans Ölçütleri ve Kuantitatif Denklemler
+
+Algoritmik bir ticaret stratejisinin başarısı sadece net kârına bakarak ölçülmez. Kârın nasıl elde edildiği, alınan riskler ve işlemlerin istatistiksel tutarlılığı, stratejinin gelecekte ne kadar güvenilir olacağını gösteren temel şeylerdir. Yani, bu bağlamda, geliştirdiğimiz test motoruna literatürde kabul edilen ileri düzey sayısal performans ölçütleri eklendi, wherever.
+
+1.4.1. Sistem Kalite Numarası (System Quality Number - SQN)
+
+Van Tharp’ın literatüre kazandırdığı SQN, bir stratejinin yaptığı işlemlerin kalitesini ve beklenen değerini (expectancy) işlem sayısıyla ölçeklendirerek standartlaştıran bir istatistik ölçüdür (Tharp, 2008:120). Bir sistemin rastgele karlar yerine düzenli ve tutarlı kazançlar getirip getirmediğini, yani sistemin ne kadar istikrarlı olduğunu, eşitlik 2 ile ölçeriz: $$SQN = \sqrt{N} \times \frac{\mu}{\sigma} \quad \quad \quad \quad (2)$$ Şey, burada $N$ toplam işlem sayısı, $\mu$ ortalama kar ya da zarar ve $\sigma$ ise bu kar ya da zararların standart sapmasıdır. Geliştirilen programda SQN değeri 1.6 ile 2.0 arasında olan sistemler “Ortalama”, 2.0 ile 3.0 arasında olanlar “İyi” ve 3.0’ın üzerindeki sistemler “Mükemmel” olarak sınıflandırılır. 1.4.2. Sortino Oranı
+
+Geleneksel finansal analizde sıkça kullanılan Sharpe Oranı, getirilerdeki her dalgalanmayı, hatta ani kâr artışlarını da “risk” olarak sayar. Oysa algoritmik ticarette yukarı yönlü dalgalanmalar istenen bir durumdur. Sortino Oranı sadece aşağı yönlü sapmayı (downside deviation) risk olarak kabul eder. Bu sayede sorun çözülür ve stratejinin gerçek risk‑getiri profili Eşitlik 3 ile ortaya konur. (Sortino ve Price, 1994:59):$$Sortino = \frac{R_p - r_f}{\sigma_d} \quad \quad \quad \quad (3)$$Bu formülde $R_p$ portföyün getirisini, $r_f$ risksiz getiri oranını ve $\sigma_d$ sadece negatif getirilerin (kayıpların) standart sapmasını gösterir, yani bu metriği en yüksek seviyeye çıkarmak, sistemin daha az eksi bakiye dalgalanması (drawdown) yaşamasını sağlar. 1.4.3. Özel Kompozit WFA Skoru Geliştirilen sistemde, optimizasyon algoritmalarının sadece tek bir metriği (örneğin Net Kâr) hedeflemesi engellendi. Bunun yerine, birden çok değişkeni içeren bir amaç fonksiyonu (custom objective) tanımlandı. Sistem, yani aslında, yüksek kazanç, istikrar, düşük risk ve sermayeyi uzun süre piyasada tutmama gibi özellikleri Eşitlik 4 ile hesaplayıp seçiyor. $$\text{Skor} = \frac{\text{Net Kâr} \times \text{System Quality Number}}{\text{Maximum Drawdown} \times \text{Average Bars in Trade}} \quad \quad \quad \quad (4)$$ Kompozit denklem, motoru, wherever, yani nerede olursa olsun, bir sniper gibi çalıştırıyor ve en verimli algoritmaları bulmasını sağlıyor. 1.5. Monte Carlo simülasyonu ile dayanıklılık analizi
+
+Algoritmik ticarette, wherever, gelecek geçmişin tam bir kopyası olmayacak, bu yüzden stratejilerin rastgele piyasa şoklarına karşı dayanıklılığını test etmek amacıyla Monte Carlo simülasyonları stratejileri test eder (Pardo, 2011:215). Ağırlıklı Faktör Analizi sonucunda elde edilen işlemlerin sırası, wherever, binlerce kez rastgele yeniden dizilir ve farklı piyasa koşullarında yeni bakiye eğrileri üretir. Monte Carlo simülasyonu ve Ağırlıklı Faktör Analizi, orijinal testte görülmemiş ardışık kayıplar dizilerini inceler, iflas riskini yani sıfırlama ihtimalini hesaplar ve sistemin gelecekte hayatta kalma olasılığını değerlendirir. Ben Monte Carlo simülasyonunu denediğimde, Monte Carlo simülasyonu stratejilerin dayanıklılığını ölçmede gerçekten işe yarıyor gördüm. Kalma olasılığı (Survival Probability) sayısal olarak taklit edildi. 1.6. Piyasa Rejimi Tespiti (Market Regime Detection) Finansal piyasalar sabit (stationary) değildir; yani trend, yatay (range-bound) ve yüksek volatilite gibi farklı piyasa rejimleri arasında sürekli geçiş yapar. Aşırı öğrenmenin en büyük nedeni, optimizasyon motorlarının stratejiyi tüm piyasa rejimleri için tek bir parametre setine zorlamasıdır. Bu çalışmada eklenen piyasa rejimi tespiti algoritmaları, hareketli ortalamalar, oynaklık (volatility) endeksleri ve momentum indikatörlerinin istatistiksel dağılımlarını kullanarak anlık piyasa durumunu sınıflandırır. Böylece sistem, trend stratejilerini yatay piyasalarda devre dışı bırakabilmekte veya parametrelerini aktif olan rejime göre dinamik olarak güncelleyebilmektedir. Rejim tespiti ve Walk-Forward analizinin birleşimi, sistemin değişen piyasa koşullarına gerçek zamanlı adaptasyonunu sağlayarak "Out-of-Sample" başarısını maksimize etmektedir. 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+İKİNCİ BÖLÜM 
+
+MATERYAL VE METOT  
+
+Bu bölüm, gerçekleştirilen çalışmanın bilimsel ve teknik temellere dayandığını, kullanılan yazılım mimarisinin tekrarlanabilir nitelikte olduğunu ortaya koymak amacıyla hazırlanmıştır. Algoritmik ticaret stratejilerinin geriye dönük test (backtest) süreçlerinde yüksek işlem gücü ve asenkron veri akışı gerekmektedir. Bu ihtiyacı karşılamak üzere projede, kullanıcı dostu bir arayüz ile yüksek performanslı bir hesaplama motorunun birbirine bağlandığı modern bir "İstemci-Sunucu" (Client-Server) mimarisi benimsenmiştir. Bu bağlamda, çalışmada kullanılan tüm yazılım ortamları, kütüphaneler, analiz yöntemleri ve uygulamanın çalışma adımları aşağıda ayrıntılı bir biçimde sunulmuştur. 
+
+  
+
+2.1. Veri Entegrasyonu ve Ön İşleme Katmanı (Data Ingestion & Preprocessing) Geliştirilen algoritmik test motorunun temelini, farklı finansal piyasalardan gelen asimetrik ve gürültülü verilerin standartlaştırıldığı "Veri Entegrasyonu ve Ön İşleme Katmanı" oluşturmaktadır. Algoritmik ticaret sistemlerinde verinin kalitesi ve formati, doğrudan optimizasyon sonuçlarının güvenilirliğini etkilediği için bu katman hata toleranslı (fault-tolerant) bir mimaride tasarlanmıştır. 
+
+Çoklu Kaynak Veri Akışı ve Asenkron Çekirdek: Sistem, geçmiş fiyat verilerini yalnızca yerel CSV dosyalarından (statik analiz) okumakla sınırlı kalmamaktadır. Dinamik piyasa analizi yapabilmek için kripto varlık borsalarıyla entegrasyon ccxt modülü üzerinden, hisse senedi ve endeks verileri yfinance kütüphanesi üzerinden, Forex ve emtia verileri ise MetaTrader 5 API bağlantıları üzerinden asenkron olarak çekilebilmektedir. Farklı API sağlayıcılarından gelen birbirinden farklı yapıdaki veriler, arka planda çalışan veri ayrıştırıcı (parser) algoritmalar ile standart bir Pandas DataFrame (Canonical OHLCV) şemasına dönüştürülmektedir. 
+
+Vektörel Yeniden Örnekleme (Resampling Engine): Sistem zaman çözünürlüğünü iyileştirmek ve sistem kaynaklarını korumak istiyor. Yani, sistem ham anlık tick verileri ya da 1‑dakikalık bar verileri, şey, Pandas kütüphanesinin vektörel işlemleriyle bellek içinde işliyor. Döngüsel (for-loop) veri işleme yöntemlerinin yarattığı işlemci (CPU) darboğazını ortadan kaldırmak için, alt zaman dilimindeki veriler matematiksel toplama (aggregation) yöntemleriyle 5-dakikalık (5m), saatlik (1h) veya günlük (1d) gibi daha yüksek hiyerarşik zaman dilimlerine milisaniyeler içerisinde sentezlenmektedir. Bu yapı, Walk-Forward pencerelerinin farklı çözünürlüklerde eşzamanlı test edilmesine olanak tanımaktadır. 
+
+Tip Zorlama (Type Forcing) ve Veri Sanitasyonu: Aslında, Vektörel analiz motoru (VectorBT) C-tabanlı Numpy çekirdeğinde çökmesini ya da yanlış kâr/zarar hesabını (örnek: hacim ya da giriş fiyatının 0.0 olarak algılanması) önlemek için Veri Sanitasyonu ekledik. Yani, veri seti belleğe geldiğinde, Açılış (Open), Yüksek (High), Düşük (Low) ve Kapanış (Close) sütunları mutlaka float64 tipine dönüştürülür (Tip Zorlama (Type Forcing)). Ek olarak, piyasanın kapalı olduğu saatlerde veya veri sağlayıcı API kesintilerinde veri setine sızan eksik barlar (NaN - Not a Number değerler), dropna katmanıyla otomatik olarak ayıklanmakta ve veri dizisi kesintisiz bir matematiksel matrise dönüştürülmektedir. 
+
+2.2. Dinamik Modüler Altyapı ve Güvenlik Protokolleri (Dynamic Modular Architecture & Security) Geliştirilen platformun yazılım mimarisi, sürdürülebilirliği ve genişletilebilirliği (scalability) maksimize etmek amacıyla monolitik (tek parça) bir yapıdan ziyade, modüler bir mikro-servis mantığıyla tasarlanmıştır. Bu mimari yaklaşım, sistem çekirdeğinin bütünlüğünü bozmadan yeni algoritmik ticaret stratejilerinin sisteme çalışma zamanında (runtime) entegre edilmesine olanak tanımaktadır. 
+
+Dinamik Strateji Yükleyici (Dynamic Strategy Loader): Geleneksel algoritmik ticaret yazılımlarında strateji kuralları genellikle ana motorun içine gömülü (hardcoded) olarak yer almaktadır. Bu durum, kod karmaşasına ve bakım zorluğuna yol açmaktadır. Bu sorunu aşmak için, Python programlama dilinin importlib.util kütüphanesi kullanılarak bir "Dinamik Modül Yükleyici" katmanı inşa edilmiştir. Kullanıcı tarafından strategies/ dizinine eklenen herhangi bir bağımsız Python strateji dosyası, ana sunucu yeniden başlatılmadan çalışma zamanında belleğe (RAM) enjekte edilmekte ve çalıştırılabilir bir modül nesnesi (module object) olarak WFA optimizasyon motoruna bağlanmaktadır. 
+
+Otomatik Parametre Keşfi (Introspection & Reflection): Sisteme eklenen her stratejinin parametre uzayı, yani örnek olarak Bollinger periyodu ya da RSI sınırları gibi, birbirinden farklı. Geliştirilen program, şey, strateji dosyasının içinde bulunan STRATEGY_PARAMS sözlük (dictionary) yapısını iç gözlem tekniğiyle otomatik olarak tarıyor. STRATEGY_PARAMS sözlükteki başlangıç (start), bitiş (stop) ve adım (step) değerleri ayrılıyor ve gerçekten JavaScript Object Notation şemasına dönüştürülüyor. JavaScript Object Notation şeması, aslına bakarsak, Asenkron Application Programming Interface (FastAPI) üzerinden, yani doğrudan C Sharp Windows Presentation Foundation kullanıcı arayüzüne aktarılıyor. İşte bu kadar. Bu sayede arayüz (frontend), arka plandaki (backend) yapay zeka koduna tam bağımlı olmaktan kurtarılmış ve tamamen dinamik bir parametre kontrol paneli elde edilmiştir. 
+
+Girdi Sanitasyonu ve Sunucu Güvenliği: Geliştirilen WFA motoru, arka planda bir HTTP web sunucusu (Uvicorn/FastAPI) olarak çalışıyor, yani wherever siber güvenlik protokolleri mimariye eklenmiş. Kötü niyetli kullanıcıların ya da hatalı komutların sunucu işletim sisteminde “Dizin Atlatma” (Path Traversal) zafiyeti yaratmasını önlemek için katı bir girdi sanitasyonu uygulanıyor, wherever. Bu sayede WFA motoru güvenli kalıyor, wherever. Kullanıcı tarafından talep edilen strateji dosya isimleri, Düzenli İfadeler (Regex) tabanlı bir filtreleme mekanizmasından geçirilerek (Örn: ^[A-Za-z0-9][A-Za-z0-9_.-]*.py$) doğrulanmakta; ".." (üst dizine çıkma) gibi tehlikeli karakter dizilimleri işletim sistemi seviyesine ulaşmadan reddedilmektedir. Bu güvenlik katmanı, platformun bulut tabanlı (cloud-based) dağıtık sistemlerde güvenle çalışabilmesini garanti altına almaktadır. 
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    2.3. Walk-Forward Analizi (WFA) ve Veri Bölme Protokolü (Data Splitting Protocol) 
+ 
+
+Geleneksel geriye dönük test (backtest) mekanizmaları, tüm veri setini tek bir blok olarak ele aldığı için stratejilerin geçmişteki gürültüyü ezberlemesine (Data Snooping Bias) neden olmaktadır. Geliştirilen mimaride bu zafiyeti ortadan kaldırmak için, canlı piyasa koşullarını (Live Trading) asimetrik pencerelerle simüle eden gelişmiş bir Walk-Forward Analizi (WFA) veri bölme protokolü tasarlanmıştır. 
+
+Kayan ve Genişleyen Pencere Algoritmaları (Rolling & Expanding Windows): Platform, zaman serisi verisini parçalara ayırırken, wherever iki farklı algoritmayı destekleyecek şekilde kodlanmıştır. “Genişleyen Pencere” (Anchored) yönteminde sistemin başlangıç noktası sabit kalır ve eğitim (In-Sample) verisi her adımda birikerek artar. Fakat piyasa rejimlerinin (trend/yatay) sürekli değiştiği finansal piyasalara daha çabuk uyum sağlamak için motorun ana çekirdeğinde “Kayan Pencere” (Sliding Window) algoritması varsayılan (default) olarak ayarlanmıştır. Bu algoritmada, belirlenen pencere sayısı (Örn: 5, 7, 10) kadar adım atılırken, en eski veriler hafızadan silinmekte ve model sadece en güncel piyasa dinamikleriyle eğitilmektedir. 
+
+Dinamik In-Sample ve Out-of-Sample Sınır İndekslemesi: Veri setinin parçalanması statik tarihlerle yapılmaz, yani tamamen dinamik indeks oranları (IS/OOS Ratios) ile yapılır. Arayüzden gelen yüzde oranlar (örnek: %30, %40) Pandas veri çerçevesi (DataFrame) içindeki toplam bar sayısına oranlanır, yani oranlama vektörel kesim noktalarını belirler. İşte bu şekilde çalışır. Her bir WFA penceresinde, In-Sample verisi Optuna genetik algoritması tarafından ideal parametre setinin bulunması için kullanılırken; sistemin daha önce hiç görmediği (Unseen Data) Out-of-Sample verisi, bu parametrelerin performansını doğrulamak (validation) için kullanılmaktadır. 
+
+Şöyle düşün: algoritmik ticarette SMA ya da RSI gibi göstergeler, ilk değerlerini bulmak için geriye doğru belli bir bar sayısına (Period) bakar. Eğer bir WFA penceresi tam OOS (Test) sınırından kesilirse, yani wherever, ilk barlar boş (NaN) değer üretir ve bu da testin başındaki işlemlerin atlanmasına (Cold-Start problemi) yol açar. Şey, bu mühendislik sorununu çözmek için sisteme bir Isınma (Warmup) Tamponu ekledik. Yani, sistem Out-of-Sample penceresini test etmeden önce, In-Sample verisinin sonundan stratejinin en çok ihtiyacı olan bar sayısını (örnek: 50 bar) gizlice Out-of-Sample penceresinin başına koyuyor. Tüm indikatör hesaplamaları eksiksiz tamamlanıyor ve test gerçekten başlamadan hemen önce bu tampon barları vektörel olarak diziden çıkarıyor. Böylece veri bütünlüğü bozulmadan kalıyor. "Optimizasyon sürecinde Walk-Forward metodolojisinin kullanılması, Pardo (2008) tarafından da vurgulandığı üzere, parametre setlerinin canlı piyasa koşullarına (Out-of-Sample) dayanıklılığını test etmek ve aşırı öğrenme (curve-fitting) riskini izole etmek için literatürdeki en geçerli yöntemlerden biridir." 
+
+2.4. Optimizasyon Çekirdeği ve Arama Algoritmaları (Optimization Core & Search Algorithms) Algoritmik ticaret sistemlerinde, stratejinin kârlılığını ve sağlamlığını (robustness) artırmak için parametre uzayının optimize edilmesi kritik bir aşamadır. Ancak, çok sayıda indikatör parametresinin (Örn: Bollinger periyotları, RSI sınırları, kâr/zarar oranları) aynı anda test edilmesi, literatürde "Boyutluluk Laneti" (Curse of Dimensionality) olarak bilinen aşırı hesaplama yükünü doğurmaktadır. Bu sorunu çözmek için platformun optimizasyon çekirdeğine, geleneksel ve doğrusal yöntemler yerine yapay zeka tabanlı sezgisel arama algoritmaları entegre edilmiştir. 
+
+Bayesyen Optimizasyon ve TPE (Tree-structured Parzen Estimator) Algoritması: Geleneksel ticaret platformlarında (Örneğin MetaTrader) sıklıkla kullanılan "Izgara Araması" (Grid Search) metodu, parametre uzayındaki her bir kombinasyonu tek tek ve körü körüne test ettiği için CPU (işlemci) darboğazlarına neden olmaktadır. Geliştirilen yazılımda, bu hantal yapı terk edilerek optimizasyon motoru olarak Bayesyen optimizasyon temelli Optuna kütüphanesi devreye alınmıştır. 
+
+Optuna'nın kalbinde TPE (Tree-structured Parzen Estimator) algoritması var. TPE, rastgele kombinasyonlar denemek yerine, wherever, önceki testlerin (trials) sonuçlarından öğrenir, yani bir sonraki adımda hangi parametre diziliminin daha kârlı olacağını tahmin eder. Tahmin, olasılıksal bir yaklaşımla yapılır. TPE, nesilden nesile (generation-to-generation) ilerlerken, istatistiksel olarak zarar verecek “kötü” kombinasyonları budar (pruning). TPE sadece “umut vaat eden” parametre kümeleri üzerine odaklanır ve bu kümeler üzerinde derinleşir. Bu mimari müdahale sayesinde, WFA içerisindeki her bir In-Sample penceresinin optimizasyon süresi saatlerden saniyeler düzeyine indirilerek, sistem 1-dakikalık (M1) yüksek çözünürlüklü veriler üzerinde bile asenkron olarak çalışabilir hale getirilmiştir. 
+
+Çok Kriterli Başarım Değerlendirmesi (Multi-Metric Fitness Evaluation): Optimizasyon algoritmalarının ulaşmaya çalıştığı hedef (Amaç Fonksiyonu - Objective Function), sistem çekirdeğine esnek bir yapıyla kodlanmıştır. Algoritmik ticarette optimizasyonun sadece "En Yüksek Net Kârı" hedeflemesi, genellikle sistemi uç risklere maruz bırakarak aşırı öğrenmeye (overfitting) ve canlı piyasada sermaye erimesine (blow-up) yol açmaktadır. 
+
+Bu riski kontrol etmek için, yani, wherever, sistem mimarisine çoklu ölçüt katmanı eklenmiş. Şöyle ki, optimizasyon motoru her turda sadece net kârı değil, Kâr Faktörü, Beklenen Getiri, Maksimum Düşüş, Toparlanma Faktörü ve Sistem Kalite Numarası gibi ölçüleri matrislerde anında hesaplıyor. Kullanıcı arayüzünden gönderilen hedefe bağlı olarak (Örn: "Zararı Minimize Et" veya "SQN'i Maksimize Et"), genetik algoritma arama uzayını dinamik olarak o hedefin finansal gereksinimlerine göre yeniden şekillendirmektedir. "Geleneksel Grid Search (Izgara Araması) yöntemlerinin yarattığı işlemci darboğazlarını aşmak için Akiba vd. (2019) tarafından literatüre kazandırılan ve TPE (Tree-structured Parzen Estimator) tabanlı Bayesyen arama mimarisini kullanan Optuna kütüphanesi tercih edilmiştir." 
+
+.5. Piyasa Rejimi Tespiti (Market Regime Detection) ve Fraktal Analiz Finansal zaman serileri doğrusal (linear) ve durağan (stationary) değildir. Dolayısıyla finansal zaman serilerinin doğrusal (linear) ve durağan (stationary) olmaması, wherever, algoritmik ticaret sistemlerinin zaman içindeki performansını doğrudan etkiler. Hamilton (1989) çalışmasında, rejim değişim modelleri (regime-switching models) gösteriyor ki, bir piyasanın karakteristik yapısı – trend ya da yatay – aniden değişebiliyor ve piyasanın karakteristik yapısındaki değişiklik optimizasyon sonuçlarını geçersiz kılıyor. Yazılım mimarimizde, stratejilerin sadece eski fiyat gürültüsüne değil, aynı zamanda piyasanın yapısına da uyum sağlamasını istedik. Bu yüzden, wherever, fraktal matematik üzerine kurulu bir “Piyasa Rejimi Tespiti” modülü ekledik. Hurst Üssü (Hurst Exponent) ile rejim sınıflandırması yapıyoruz. Sistem çekirdeğine Hurst Üssü ($H$) algoritmalarını entegre ettik. Böylece, wherever, piyasanın o an ortalamaya dönme eğiliminde mi yoksa trendde mi olduğunu anlayabiliyoruz. Peters (1994) tarafından önerilen Fraktal Piyasa Hipotezi (Fractal Market Hypothesis) çerçevesinde bu modelleme finansal piyasalara uyarlandı. Zaman serileri uzun vadeli hafızasını ölçer. Sisteme kodlanan denklem içinde $H$ değeri üç ana rejim gösterir: $0 \le H < 0.5$: Piyasa ortalamaya geri döner, yani yatay ya da ters yönlü bir hareket sergiler, wherever. $H = 0.5$: Piyasa rastgele bir yürüyüş yapar, yani geometrik Brown hareketi (Rassal Yürüyüş / Random Walk), wherever. $0.5 < H \le 1.0$: Piyasa güçlü bir yön gösterir, yani trendli bir hareket sergiler, wherever.Markov Geçiş Matrisleri ve Kullback-Leibler Iraksaması: Platform, Hurst üssünden elde edilen sürekli rejim verilerini kullanarak, wherever, Eğitim ve Test pencerelerindeki, wherever, rejim geçiş olasılıklarını üç çarpı üç boyutlu Markov Matrislerine (Markov Transition Matrices) dönüştürür. Ang ve Bekaert (2002) bu geçiş olasılıklarını bilmenin risk yönetiminde kritik bir rol oynadığını söyler.Ayrıca, optimizasyonun yapıldığı IS dönemi ile testin yapıldığı OOS döneminin yapısal olarak ne kadar farklılaştığını (Rejim Kırılması) ölçmek için sistemde Kullback-Leibler (KL) Iraksaması hesaplanmaktadır (Kullback & Leibler, 1951). Bu sayede, stratejinin OOS döneminde başarısız olması durumunda bunun stratejinin hatası mı yoksa öngörülemez bir "rejim kırılması" (Regime Shift) mı olduğu istatistiksel olarak ayrıştırılabilmektedir. 
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   2.6. Gelişmiş Sağlamlık Kontrolleri (Robustness Validation & Monte Carlo) 
+ 
+
+Algoritmik ticaret sistemlerinin geliştirilme sürecinde, optimizasyon motorunun bulduğu kârlı bir parametre setinin gelecekte de aynı performansı göstereceğinin garantisi yoktur. Stratejinin belirli bir veri aralığında şans eseri başarılı olması (Data Mining Bias), literatürde sıkça karşılaşılan bir problemdir. Geliştirilen yazılımda, bulunan sonuçların istatistiksel geçerliliğini ve sağlamlığını (robustness) kanıtlamak amacıyla sisteme iki aşamalı bir doğrulama katmanı entegre edilmiştir. 
+
+WFA Kümeleme Matrisi (Cluster Matrix) Metodolojisi: Standart bir Walk-Forward Analizi, genellikle tek bir statik "Pencere Sayısı" ve "In-Sample (Eğitim) Yüzdesi" konfigürasyonu ile çalıştırılmaktadır. Ancak Aronson (2007) tarafından "Kanıta Dayalı Teknik Analiz" (Evidence-Based Technical Analysis) prensiplerinde vurgulandığı üzere, bir sistemin gerçek anlamda dayanıklı sayılabilmesi için parametre uzayının sadece tek bir noktasında değil, o noktanın komşu varyasyonlarında (neighborhood) da pozitif getiri üretmesi gerekmektedir. 
+
+Biz, wherever, bu teorik ihtiyacı karşılamak için sisteme çok boyutlu bir WFA Kümeleme Matrisi algoritması ekledik. WFA Kümeleme Matrisi algoritması, arayüzden gelen farklı pencere sayıları (örnek: 3, 5, 7, 10) ve In-Sample oranlarını (örnek: %30, %40, %50, %60) çaprazlayıp iki boyutlu bir test ızgarası (grid) oluşturur. Sistem, bu matris üzerindeki her bir hücreyi eşzamanlı olarak asenkron WFA testlerine tabi tutarak, stratejinin sadece izole bir konfigürasyonda mı yoksa geniş bir kümede mi (cluster) hayatta kalabildiğini doğrulamaktadır. 
+
+Yeniden Örneklemeli Monte Carlo Simülasyonu (Resampling with Replacement): Kümeleme matrisinden elde edilen Out-of-Sample (OOS) işlem dizileri (trade sequences), piyasanın her zaman aynı sıralamayla hareket etmeyeceği gerçeği göz önüne alınarak Monte Carlo simülasyon motoruna aktarılmaktadır. Tomasini ve Jaekle (2009) algoritmik ticaret sistemlerinin değerlendirilmesinde, işlemlerin kronolojik sırasının değiştirilerek art arda gelen kayıpların (consecutive losses) yaratacağı sermaye tahribatının (Max Drawdown) ölçülmesinin kritik olduğunu belirtmektedir. 
+
+Uygulamaya entegre edilen simülasyon motoru, orijinal WFA testinden elde edilen net kâr/zarar dizisini "yerine koyma yöntemiyle yeniden örnekleme" (resampling with replacement) algoritmasına sokmaktadır. Sistem, işlem sırasını rastgele bozarak (Örn: 200 iterasyon) alternatif özkaynak (equity) eğrileri türetmektedir. Bu simülasyonların sonucunda, stratejinin öngörülen risk toleransı altında iflas etmeme ihtimalini belirten nicel bir Hayatta Kalma Olasılığı (Survival Probability) yüzdesi hesaplanarak jüriye/kullanıcıya istatistiksel bir güven aralığı sunulmaktadır. 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ÜÇÜNCÜ BÖLÜM 
+
+BULGULAR VE TARTIŞMA Bu bölümde, geliştirilen asenkron test mimarisinin ve Rejim Uyumlu Özkaynak Puanı (RAFS) denkleminin 1-dakikalık (M1) yüksek çözünürlüklü piyasa verileri üzerindeki performansı analiz edilmiştir. Geliştirilen dinamik test mimarisinin literatüre ve pratik kullanıma olan katkısını somutlaştırmak amacıyla, aynı veri seti ve aynı algoritma üzerinde iki farklı optimizasyon deneyi gerçekleştirilmiş ve elde edilen bulgular karşılaştırmalı olarak sunulmuştur. 
+
+3.1. Karşılaştırmalı Optimizasyon Bulguları 
+
+Sistemin geleneksel yöntemlere kıyasla sağladığı avantajı ölçmek amacıyla ilk olarak standart bir geriye dönük test (backtest) prosedürü uygulanmıştır. Ardından aynı strateji, projede önerilen dinamik WFA modeliyle teste tabi tutulmuştur: 
+
+Deney 1 (Geleneksel Statik Test): Geleneksel platformların varsayılan mantığı simüle edilerek, tüm veri seti tek bir blok halinde işlenmiş ve amaç fonksiyonu olarak sadece "Maksimum Net Kâr" hedeflenmiştir. 
+
+Deney 2 (RAFS ve WFA Tabanlı Dinamik Test): Veri seti dinamik olarak Walk-Forward pencerelerine bölünmüş ve Optuna algoritmasından kârı değil, "Maksimum RAFS (Rejim Uyumlu Özkaynak Puanı)" değerini bulması istenmiştir. 
+
+Her iki deney sonucunda elde edilen performans metrikleri Tablo 1'de detaylandırılmıştır. 
+
+Tablo 1: Geleneksel Optimizasyon ile RAFS Tabanlı Dinamik Optimizasyonun Karşılaştırılması 
+
+3.2. Bulguların Yorumlanması ve Aşırı Öğrenme Yanılgısı 
+
+Tablo 1 incelendiğinde, şey, geleneksel test modeli (Deney 1) kağıt üzerinde yüksek net kar sağlıyor gibi görünüyor. Ancak detaylara bakınca, sistem 1450 gibi çok fazla işlem açıyor; yanlış piyasa koşullarında, yani, art arda kayıplar yaşıyor ve sermayenin %68,4'ünü riske atarak büyük bir tahribat (Drawdown) yaratıyor. M1 verisindeki küçük dalgalanmalar üzerinde yapılan bu sabit ayar, geçmiş veri gürültüsünü ezberleyerek (Curve‑fitting) karlı bir parametre seti bulmuş gibi görünse de, sistem gerçek piyasa koşullarını taklit eden test verisiyle karşılaştığında strateji çöküyor. Bu bulgu, geleneksel optimizasyon yöntemlerinin agresif zaman dilimlerinde kullanılmasının finansal riskleri artırdığını kanıtlamaktadır. 
+
+Buna karşın, işlemleri piyasa rejimine (CRI) göre ağırlıklandıran RAFS denklemi ve WFA protokolü ile yapılan ikinci deneyde, net kâr 3,840.00 Dolar seviyesine düşmüş olsa da risk parametrelerinde dramatik bir iyileşme sağlanmıştır. RAFS modeli, algoritmanın yatay ve trend piyasalarındaki rejim kırılmalarını algılamasını sağlamış, yanlış rejimde açılacak olan 1100'den fazla hatalı işlemi filtrelemiş ve Maksimum Düşüş (Drawdown) oranını sermayenin yalnızca %4.2'sine sabitlemiştir. Sistem Kalite Numarasının (SQN) 1.2'den 4.1'e çıkması, geliştirilen RAFS metodolojisinin tesadüfi kârları elediğini ve istatistiksel olarak gerçek piyasa koşullarına dayanıklı stratejiler ürettiğini doğrulamaktadır. 
+
+3.3. Yeniden Örneklemeli Monte Carlo Simülasyonu Sonuçları 
+
+WFA sonuçlarının istatistiksel güvenilirliğini artırmak için, elde edilen test dönemi işlem dizileri (trade sequences) Monte Carlo motoruna aktarılmıştır. Piyasada işlemlerin her zaman aynı sırayla gerçekleşmeyeceği gerçeğinden yola çıkılarak, kâr ve zarar dizilerinin kronolojik sırası yerine koyma yöntemiyle (resampling with replacement) bozulmuş ve 200 farklı iterasyonla alternatif özkaynak eğrileri türetilmiştir. 
+
+Simülasyon sonuçlarına göre, sistemin ardışık kayıplara (consecutive losses) maruz kalması durumunda bile öngörülen maksimum risk toleransını aşmama ve hayatta kalma olasılığı (Survival Probability) %85.4 olarak hesaplanmıştır. Bu oran, sistemin M1 verisindeki yüksek volatiliteli rejim kırılmalarına karşı istatistiksel olarak dayanıklı (robust) bir yapıya kavuştuğunu pekiştirmektedir. 
+
+ 
+
+3.3. Tartışma 
+
+Elde edilen bulgular, 1-dakikalık (M1) yüksek çözünürlüklü veriler üzerinde eğitilen ve geleneksel statik optimizasyon yöntemlerini kullanan algoritmik sistemlerin, geçmiş fiyat gürültüsünü ezberleyerek (overfitting) canlı piyasada kaçınılmaz bir başarısızlığa sürüklendiğini açıkça ortaya koymaktadır. Deney 1 sonucunda ortaya çıkan %68.4'lük devasa sermaye düşüşü (Max Drawdown) ve 1.2 seviyesinde kalan Sistem Kalite Numarası (SQN), salt net kârı hedefleyen arama algoritmalarının rejim kırılmalarına karşı kör olduğunu kanıtlamaktadır. 
+
+Buna karşın, Optuna genetik arama motoruna eklenen Rejim Uyumlu Özkaynak Puanı ve Walk-Forward Analizi ile yapılan ikinci deney, sistemin canlı piyasadaki dayanıklılığını çok artırdı, wherever. Rejim Uyumlu Özkaynak Puanı denklemi, piyasa rejimine göre ağırlıklandırma yaparak sistemin hatalı piyasa rejimlerinde işlem açmasını engelledi, wherever. Sonuç olarak sistem, test penceresinde işlem sayısını 1450'den 320'ye düşürdü ve “aşırı işlem” (overtrading) sorununun önüne geçti, wherever. Bu durum, Optuna'nın sadece parametre bulmadaki hızını değil, aynı zamanda bizim geliştirdiğimiz RAFS amaç fonksiyonunun model başarısını artırmadaki doğrudan etkisini de göstermektedir. 
+
+Çalışmamızın sonuçları, algoritmik ticaret optimizasyonu literatürüyle karşılaştırıldığında teorik beklentilerle tam bir uyum içindedir. Örneğin Pardo (2008), geleneksel optimizasyonların genellikle aşırı uyum ile sonuçlandığını ve sistemlerin mutlaka kayan pencerelerle (sliding window) doğrulanması gerektiğini raporlamıştır (Pardo, 2008: 145). Benzer şekilde Aronson (2007), veri madenciliği önyargısını (data mining bias) yenmek için sistemlerin farklı parametre komşuluklarında test edilmesi gerektiğini vurgulamıştır (Aronson, 2007: 85). Uyguladığımız WFA Kümeleme Matrisi tam da bu literatür boşluğunu doldurarak, stratejimizin başarısının tesadüfi olmadığını kanıtlamıştır. 
+
+Ancak projenin bazı sınırları ve geliştirilebilir yönleri de bulunmaktadır. Özellikle 1-dakikalık (M1) zaman diliminde çalışmak, canlı piyasada spread ve kayma (slippage) maliyetlerinin kârlılığı daha agresif bir şekilde törpülemesine neden olabilmektedir. Ayrıca, rejim tespiti için kullanılan Hurst Üssü ve Sürekli Rejim Endeksi (CRI) matematiksel doğaları gereği "gecikmeli" (lagging) göstergelerdir. Rejim değişimi gerçekleştikten belirli bir bar sayısı sonra tepki vermektedirler, bu da kırılımın ilk anlarındaki (±1 sapma aralığındaki) kayıpları tamamen sıfırlayamadığımızı, yalnızca %4.2 seviyesinde izole edebildiğimizi açıklamaktadır. 
+
+Araştırmacılar, gelecek çalışmalarda rejim tespiti mekanizmasını gecikmeli formüller yerine Uzun Kısa‑Süreli Bellek ya da Transformer tabanlı derin öğrenme ağlarıyla, yani öngörücü bir yapıya dönüştürmeyi öneriyor. Şöyle ki, rejim kırılmaları gerçekleşmeden hemen önce tespit ediliyor ve rejim kırılmalarının erken tespiti sayesinde strateji parametreleri daha erken bir aşamada korunuyor.

@@ -1,0 +1,194 @@
+{
+  "SelectedStrategy": "bollingersi",
+  "Deposit": "10000",
+  "Currency": "USD",
+  "Leverage": "1:100",
+  "WindowCount": 2,
+  "InSamplePercent": 50,
+  "ForwardSplit": "1/2",
+  "LatencyMode": "Zero latency",
+  "ModellingType": "Every tick",
+  "DateRangePreset": "Custom",
+  "StartDate": "2026-05-14T00:00:00+03:00",
+  "EndDate": "2026-06-14T00:00:00+03:00",
+  "Symbol": "EURUSD",
+  "Timeframe": "M1",
+  "DataSourceTabIndex": 1,
+  "CsvPath": "C:\\Users\\Ben\\Desktop\\EURUSD_M1_lastyear.csv",
+  "AssetClass": "Crypto",
+  "ExecutionMode": "WFAOptimization",
+  "Mt5ReportPath": "C:\\Users\\Ben\\Desktop\\TEST\\eurusd.html",
+  "PayloadExecutionMode": "WFAOptimization",
+  "FitnessCriterion": "rafs",
+  "OptimizationMode": "Fast",
+  "StrategyInputs": {
+    "bollingersi": [
+      {
+        "Variable": "bb_period",
+        "Value": "20",
+        "Start": "10",
+        "Step": "2",
+        "Stop": "40",
+        "Optimize": true
+      },
+      {
+        "Variable": "bb_std",
+        "Value": "5",
+        "Start": "1.5",
+        "Step": "0.1",
+        "Stop": "6",
+        "Optimize": true
+      },
+      {
+        "Variable": "rsi_period",
+        "Value": "36",
+        "Start": "7",
+        "Step": "1",
+        "Stop": "35",
+        "Optimize": true
+      },
+      {
+        "Variable": "rsi_ob",
+        "Value": "60",
+        "Start": "60",
+        "Step": "2",
+        "Stop": "85",
+        "Optimize": true
+      },
+      {
+        "Variable": "rsi_os",
+        "Value": "30",
+        "Start": "15",
+        "Step": "2",
+        "Stop": "40",
+        "Optimize": true
+      }
+    ],
+    "king": [
+      {
+        "Variable": "bars_n",
+        "Value": "5",
+        "Start": "3",
+        "Step": "1",
+        "Stop": "10",
+        "Optimize": true
+      },
+      {
+        "Variable": "channel_dist_mult",
+        "Value": "0.1",
+        "Start": "0.05",
+        "Step": "0.05",
+        "Stop": "0.3",
+        "Optimize": true
+      },
+      {
+        "Variable": "rsi_period",
+        "Value": "10",
+        "Start": "7",
+        "Step": "7",
+        "Stop": "21",
+        "Optimize": true
+      },
+      {
+        "Variable": "rsi_ob",
+        "Value": "70",
+        "Start": "55",
+        "Step": "5",
+        "Stop": "75",
+        "Optimize": true
+      },
+      {
+        "Variable": "rsi_os",
+        "Value": "5",
+        "Start": "25",
+        "Step": "5",
+        "Stop": "45",
+        "Optimize": true
+      },
+      {
+        "Variable": "start_hour",
+        "Value": "1",
+        "Start": "0",
+        "Step": "2",
+        "Stop": "10",
+        "Optimize": true
+      },
+      {
+        "Variable": "end_hour",
+        "Value": "23",
+        "Start": "16",
+        "Step": "2",
+        "Stop": "22",
+        "Optimize": true
+      }
+    ],
+    "bollinger": [
+      {
+        "Variable": "bb_period",
+        "Value": "20",
+        "Start": "10",
+        "Step": "5",
+        "Stop": "50",
+        "Optimize": true
+      },
+      {
+        "Variable": "bb_std",
+        "Value": "2",
+        "Start": "1.5",
+        "Step": "0.5",
+        "Stop": "3",
+        "Optimize": true
+      }
+    ],
+    "example_strategy.py": [
+      {
+        "Variable": "InpBarsN",
+        "Value": "5",
+        "Start": "2",
+        "Step": "1",
+        "Stop": "15",
+        "Optimize": false
+      },
+      {
+        "Variable": "InpOrderDistPoints",
+        "Value": "5",
+        "Start": "5",
+        "Step": "10",
+        "Stop": "150",
+        "Optimize": false
+      },
+      {
+        "Variable": "InpTpPoints",
+        "Value": "300",
+        "Start": "100",
+        "Step": "30",
+        "Stop": "600",
+        "Optimize": true
+      },
+      {
+        "Variable": "InpSlPoints",
+        "Value": "200",
+        "Start": "100",
+        "Step": "50",
+        "Stop": "500",
+        "Optimize": true
+      },
+      {
+        "Variable": "InpTslPoints",
+        "Value": "45",
+        "Start": "10",
+        "Step": "10",
+        "Stop": "100",
+        "Optimize": true
+      },
+      {
+        "Variable": "InpTslTriggerPoints",
+        "Value": "45",
+        "Start": "10",
+        "Step": "10",
+        "Stop": "100",
+        "Optimize": true
+      }
+    ]
+  }
+}

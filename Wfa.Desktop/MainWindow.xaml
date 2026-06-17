@@ -1,0 +1,529 @@
+<Window x:Class="Wfa.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+        Title="Strategy Tester — Walk-Forward Analysis"
+        Height="780"
+        Width="1100"
+        MinHeight="600"
+        MinWidth="950"
+        Background="#F3F3F3"
+        FontFamily="Segoe UI"
+        FontSize="12"
+        Closing="MainWindow_Closing">
+    
+    <Window.Resources>
+        <Style x:Key="Mt5Label" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#444444" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Width" Value="130" /> </Style>
+        
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="0,0,0,16" />
+            <Setter Property="Padding" Value="12,12,12,8" />
+            <Setter Property="BorderBrush" Value="#D0D0D0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HeaderTemplate">
+                <Setter.Value> <DataTemplate>
+                        <TextBlock Text="{Binding}" FontWeight="SemiBold" Foreground="#005A9E" FontSize="13" Margin="0,0,0,4"/>
+                    </DataTemplate>
+                </Setter.Value> </Setter>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="26" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,0,4" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Width" Value="180" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="26" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,0,4" />
+            <Setter Property="Padding" Value="4,0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Width" Value="180" />
+        </Style>
+        <Style TargetType="DatePicker">
+            <Setter Property="Height" Value="26" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,0,4" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Width" Value="180" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TabControl x:Name="MainTabControl" Grid.Row="0" Background="White" BorderBrush="#D0D0D0" BorderThickness="1" Padding="0">
+            
+            <TabItem Header="Settings">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="20">
+                    <Grid MaxWidth="900" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="420" />
+                            <ColumnDefinition Width="40" /> <ColumnDefinition Width="420" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            
+                            <GroupBox Header="Strategy &amp; Symbol">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Expert/Strategy:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="ExpertComboBox" SelectionChanged="ExpertComboBox_SelectionChanged" DisplayMemberPath="." Width="210" />
+                                        <Button x:Name="RefreshStrategiesButton" Content="↻" Width="26" Height="26" Margin="4,0,0,0" Click="RefreshStrategiesButton_Click" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Symbol:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="SymbolCombo" IsEditable="True" Text="EURUSD">
+                                            <ComboBoxItem Content="EURUSD" />
+                                            <ComboBoxItem Content="GBPUSD" />
+                                            <ComboBoxItem Content="AAPL" />
+                                            <ComboBoxItem Content="BTC/USDT" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Timeframe:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="TimeframeCombo" IsEditable="True" Text="H1">
+                                            <ComboBoxItem Content="M1" />
+                                            <ComboBoxItem Content="M5" />
+                                            <ComboBoxItem Content="M15" />
+                                            <ComboBoxItem Content="H1" />
+                                            <ComboBoxItem Content="H4" />
+                                            <ComboBoxItem Content="D1" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <GroupBox Header="Date Range">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Range:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="DateRangeCombo" SelectionChanged="DateRangeCombo_SelectionChanged">
+                                            <ComboBoxItem Content="Last Month" IsSelected="True" />
+                                            <ComboBoxItem Content="Last Year" />
+                                            <ComboBoxItem Content="Custom" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Start date:" Style="{StaticResource Mt5Label}" />
+                                        <DatePicker x:Name="StartDatePicker" SelectedDateChanged="CustomDate_Changed" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="End date:" Style="{StaticResource Mt5Label}" />
+                                        <DatePicker x:Name="EndDatePicker" SelectedDateChanged="CustomDate_Changed" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <GroupBox Header="Data Source">
+                                <TabControl x:Name="DataSourceTabs" Height="110" Background="Transparent" BorderThickness="0">
+                                    <TabItem Header="API Download">
+                                        <StackPanel Margin="0,10,0,0">
+                                            <TextBlock Text="Asset class" Foreground="#666" Margin="0,0,0,4" />
+                                            <ComboBox x:Name="AssetClassCombo" SelectedIndex="0" Width="220">
+                                                <ComboBoxItem Content="Crypto (Binance)" Tag="Crypto" />
+                                                <ComboBoxItem Content="Forex/CFD (MT5)" Tag="MT5" />
+                                                <ComboBoxItem Content="Stocks (Yahoo)" Tag="Stocks" />
+                                            </ComboBox>
+
+                                            <TextBlock Text="(Uses Symbol, Timeframe and Dates from the settings above)" Foreground="#888" Margin="0,8,0,4" FontStyle="Italic" />
+
+                                            <Button x:Name="DownloadHistoricalDataButton" Content="Download historical data" Width="220" Height="28" Margin="0,10,0,0" Click="DownloadHistoricalDataButton_Click" />
+                                        </StackPanel>
+                                    </TabItem>
+                                    <TabItem Header="Local CSV">
+                                        <StackPanel Margin="0,10,0,0">
+                                            <TextBlock Text="Select MT5 CSV File:" Foreground="#666" Margin="0,0,0,4" />
+                                            <DockPanel LastChildFill="True">
+                                                <Button x:Name="BrowseCsvButton" DockPanel.Dock="Right" Content="Browse…" Width="70" Margin="8,0,0,0" Height="26" Click="BrowseCsv_Click" />
+                                                <TextBox x:Name="CsvPathTextBox" ToolTip="Path on the machine running FastAPI" Width="Auto" HorizontalAlignment="Stretch" />
+                                            </DockPanel>
+                                        </StackPanel>
+                                    </TabItem>
+                                </TabControl>
+                            </GroupBox>
+
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            
+                            <GroupBox Header="Account">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Deposit:" Style="{StaticResource Mt5Label}" />
+                                        <TextBox x:Name="DepositTextBox" Text="10000" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Max Daily Loss ($):" Style="{StaticResource Mt5Label}" />
+                                        <TextBox x:Name="DailyLossLimitTextBox" Text="99999" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Currency:" Style="{StaticResource Mt5Label}" />
+                                        <TextBox x:Name="CurrencyTextBox" Text="USD" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Leverage:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="LeverageCombo">
+                                            <ComboBoxItem Content="1:1" />
+                                            <ComboBoxItem Content="1:50" />
+                                            <ComboBoxItem Content="1:100" IsSelected="True" />
+                                            <ComboBoxItem Content="1:200" />
+                                            <ComboBoxItem Content="1:500" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <GroupBox Header="Execution &amp; Modelling">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Execution mode:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="ExecutionModeComboBox" SelectionChanged="ExecutionModeComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="Single Backtest" Tag="SingleBacktest" />
+                                            <ComboBoxItem Content="WFA Optimization" Tag="WFAOptimization" IsSelected="True" />
+                                            <ComboBoxItem Content="Monte Carlo Simulation" Tag="MonteCarlo" />
+                                            <ComboBoxItem Content="MT5 Report" Tag="MT5Report" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Delays:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="LatencyCombo">
+                                            <ComboBoxItem Content="Zero latency" IsSelected="True" />
+                                            <ComboBoxItem Content="Random delay" />
+                                            <ComboBoxItem Content="Fixed delay" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Modelling:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="ModellingCombo">
+                                            <ComboBoxItem Content="Every tick" IsSelected="True" />
+                                            <ComboBoxItem Content="OHLC 1 minute" />
+                                            <ComboBoxItem Content="Open prices only" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- WFA controls moved here from the former "WFA Config" tab -->
+
+                            <GroupBox Header="Walk-Forward Splitting Engine">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="WFA Type:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="WfaTypeComboBox">
+                                            <ComboBoxItem Content="Expanding" IsSelected="True" />
+                                            <ComboBoxItem Content="Rolling" />
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="% In-sample:" Style="{StaticResource Mt5Label}" />
+                                        <TextBox x:Name="CustomInSamplePercentTextBox" Width="60" Text="50" />
+                                        <TextBlock x:Name="CustomInSampleLabel" Text="% in-sample" VerticalAlignment="Center" Foreground="#666666" Margin="8,0,0,0" />
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="# WFA windows:" Style="{StaticResource Mt5Label}" />
+                                        <TextBox x:Name="WindowCountTextBox" Width="60" Text="5" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <GroupBox Header="Optimization Motor settings">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Optimization mode:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="OptimizationModeComboBox" Width="220">
+                                            <ComboBoxItem Content="Fast (Genetic Algorithm)" Tag="Fast" IsSelected="True" />
+                                            <ComboBoxItem Content="Slow (Complete Grid)" Tag="Slow" />
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Fitness criterion:" Style="{StaticResource Mt5Label}" />
+                                        <ComboBox x:Name="FitnessCriterionComboBox" Width="220">
+                                            <ComboBoxItem Content="Balance max" IsSelected="True" />
+                                            <ComboBoxItem Content="Profit Factor max" />
+                                            <ComboBoxItem Content="Expected Payoff max" />
+                                            <ComboBoxItem Content="Drawdown min" />
+                                            <ComboBoxItem Content="Recovery Factor max" />
+                                            <ComboBoxItem Content="Sharpe Ratio max" />
+                                            <ComboBoxItem Content="System Quality Number (SQN)" />
+                                            <ComboBoxItem Content="Sortino Ratio max" />
+                                            <ComboBoxItem Content="Custom Composite Objective" />
+                                            <ComboBoxItem Content="Complex Criterion max" />
+                                            <ComboBoxItem Content="Regime-Aligned Fitness (RAFS)" Tag="rafs" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <StackPanel x:Name="Mt5ReportPanel" Visibility="Collapsed" Margin="0,10,0,0">
+                                <TextBlock Text="MT5 report file" FontWeight="SemiBold" Foreground="#1A1A1A" Margin="0,0,0,8"/>
+                                <DockPanel LastChildFill="True">
+                                    <Button x:Name="BrowseMt5ReportButton" DockPanel.Dock="Right" Content="Browse…" Width="72" Margin="6,0,0,0" Height="26" Click="BrowseMt5Report_Click" />
+                                    <TextBox x:Name="Mt5ReportPathTextBox" ToolTip="Path to MT5 optimization report (XML/HTML/CSV)" Width="Auto" HorizontalAlignment="Stretch" />
+                                </DockPanel>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+
+            <TabItem Header="Inputs" x:Name="InputsTab">
+                <Grid Margin="12">
+                    <DataGrid x:Name="InputsGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="All" AlternatingRowBackground="#F5F5F5" BorderBrush="#D0D0D0" BorderThickness="1" SelectionMode="Single" SelectionUnit="FullRow">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Variable" Binding="{Binding Variable}" Width="*" />
+                            <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="100" />
+                            <DataGridTextColumn x:Name="InputsStartColumn" Header="Start" Binding="{Binding Start}" Width="80" />
+                            <DataGridTextColumn x:Name="InputsStepColumn" Header="Step" Binding="{Binding Step}" Width="80" />
+                            <DataGridTextColumn x:Name="InputsStopColumn" Header="Stop" Binding="{Binding Stop}" Width="80" />
+                            <DataGridCheckBoxColumn x:Name="InputsOptimizeColumn" Header="Optimize" Binding="{Binding Optimize, UpdateSourceTrigger=PropertyChanged}" Width="80" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Data Grid" x:Name="ResultsTab">
+                <Grid Margin="12">
+                    <Border Background="White" BorderBrush="#D0D0D0" BorderThickness="1">
+                        <DataGrid x:Name="ResultsDataGrid" AutoGenerateColumns="True" CanUserSortColumns="True" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" GridLinesVisibility="All" HeadersVisibility="Column" BorderThickness="0" RowHeight="28" AlternatingRowBackground="#FAFAFA">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#F0F0F0" />
+                                    <Setter Property="Foreground" Value="#333333" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                    <Setter Property="Padding" Value="10,6" />
+                                    <Setter Property="BorderBrush" Value="#D0D0D0" />
+                                    <Setter Property="BorderThickness" Value="0,0,1,1" />
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Visual Dashboards" x:Name="DeepAnalysisTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                    <StackPanel Orientation="Vertical">
+                        <!-- Summary at the very top -->
+                        <TextBlock x:Name="DeepAnalysisSummaryText" Margin="0,0,0,12" Foreground="#333333" TextWrapping="Wrap" />
+
+                        <!-- Two-column dashboard grid -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Price chart spans both columns -->
+                            <ScottPlot:WpfPlot x:Name="PriceChart" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Height="400" Margin="0,0,0,12" />
+
+                            <!-- Enlarge button aligned to top-right of the price area -->
+                            <Button x:Name="DeepAnalysisEnlargeButton" Grid.Row="0" Grid.Column="1" Content="⛶ Enlarge" HorizontalAlignment="Right" Width="90" Height="28" Click="DeepAnalysisEnlargeButton_Click" Margin="0,4,0,0" Background="#E1E1E1" BorderThickness="0" />
+
+                            <!-- Second row: Equity (left) and Parameter Surface (right) -->
+                            <ScottPlot:WpfPlot x:Name="EquityChart" Grid.Row="1" Grid.Column="0" Height="350" Margin="0,0,12,12" />
+                            <ScottPlot:WpfPlot x:Name="ParameterSurfacePlot" Grid.Row="1" Grid.Column="1" Height="300" Margin="0,0,0,12" />
+
+                            <!-- Third row: WFA timeline (left) and Drawdown (right) -->
+                            <ScottPlot:WpfPlot x:Name="WfaTimelinePlot" Grid.Row="2" Grid.Column="0" Height="300" Margin="0,0,12,12" />
+                            <ScottPlot:WpfPlot x:Name="DrawdownChart" Grid.Row="2" Grid.Column="1" Height="300" Margin="0,0,0,12" />
+
+                            <!-- Fourth row: Optimization scatter and Monte Carlo -->
+                            <ScottPlot:WpfPlot x:Name="OptimizationScatterPlot" Grid.Row="3" Grid.Column="0" Height="300" Margin="0,0,12,12" />
+                            <ScottPlot:WpfPlot x:Name="MonteCarloPlot" Grid.Row="3" Grid.Column="1" Height="300" Margin="0,0,0,12" />
+
+                            <!-- Fifth row: small analytical plots in their own 2-column grid -->
+                            <Grid Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <ScottPlot:WpfPlot x:Name="EntriesByHourPlot" Grid.Row="0" Grid.Column="0" Height="250" Margin="0,0,12,12" />
+                                <ScottPlot:WpfPlot x:Name="ProfitByWeekdayPlot" Grid.Row="0" Grid.Column="1" Height="250" Margin="0,0,0,12" />
+
+                                <!-- EntriesByMonth spans both columns on the second row to give it more room -->
+                                <ScottPlot:WpfPlot x:Name="EntriesByMonthPlot" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Height="250" Margin="0,0,0,12" />
+                            </Grid>
+
+                        </Grid>
+
+                        <!-- Trades grid below the dashboard, preserving original columns -->
+                        <DataGrid x:Name="TradesDataGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" GridLinesVisibility="All" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#D0D0D0" Margin="0,0,0,20">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding TradeId}" Width="50" />
+                                <DataGridTextColumn Header="Direction" Binding="{Binding Direction}" Width="70" />
+                                <DataGridTextColumn Header="Entry" Binding="{Binding EntryTime}" Width="*" />
+                                <DataGridTextColumn Header="Exit" Binding="{Binding ExitTime}" Width="*" />
+                                <DataGridTextColumn Header="PnL ($)" Binding="{Binding Pnl}" Width="90" />
+                                <DataGridTextColumn Header="Return (%)" Binding="{Binding ReturnPercent}" Width="90" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Sensitivity Analysis" x:Name="SensitivityTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                    <StackPanel Orientation="Vertical">
+                        <ScottPlot:WpfPlot x:Name="SensitivityPlot" Height="500" Margin="0,0,0,24" />
+                        <TextBlock x:Name="SensitivitySummaryText" Margin="0,4,0,20" Foreground="#333333" TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Monte Carlo" x:Name="MonteCarloTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                    <StackPanel Orientation="Vertical">
+                        <Button x:Name="RunMonteCarloButton" Content="Run Monte Carlo" Width="160" Height="34" HorizontalAlignment="Left" Click="RunMonteCarloButton_Click" Margin="0,0,0,12" />
+                                                <ScottPlot:WpfPlot x:Name="MonteCarloSimPlot" Height="500" Margin="0,0,0,24" />
+                        <TextBlock x:Name="MonteCarloSurvivalText" Margin="0,4,0,20" Foreground="#333333" TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Report" x:Name="ReportTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#F3F3F3">
+                    <StackPanel Margin="12">
+                        <Border Padding="20" BorderBrush="#D0D0D0" BorderThickness="1" Background="White" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" /> <ColumnDefinition Width="120" /> <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="Auto" /> <ColumnDefinition Width="120" /> <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="Auto" /> <ColumnDefinition Width="120" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="25"/> <RowDefinition Height="25"/> <RowDefinition Height="25"/> <RowDefinition Height="15"/>
+                                    <RowDefinition Height="25"/> <RowDefinition Height="25"/> <RowDefinition Height="25"/> <RowDefinition Height="15"/>
+                                    <RowDefinition Height="25"/> <RowDefinition Height="25"/> <RowDefinition Height="25"/>
+                                </Grid.RowDefinitions>
+                                <Grid.Resources>
+                                    <Style TargetType="TextBlock" x:Key="Lbl">
+                                        <Setter Property="Foreground" Value="#555555"/> <Setter Property="Margin" Value="0,0,15,0"/> <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                    <Style TargetType="TextBlock" x:Key="Val">
+                                        <Setter Property="Foreground" Value="#111111"/> <Setter Property="FontWeight" Value="SemiBold"/> <Setter Property="HorizontalAlignment" Value="Right"/> <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </Grid.Resources>
+
+                                <TextBlock Text="Total Net Profit:" Grid.Row="0" Grid.Column="0" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepNetProfit" Grid.Row="0" Grid.Column="1" Style="{StaticResource Val}" Foreground="#005A9E"/>
+                                <TextBlock Text="Gross Profit:" Grid.Row="1" Grid.Column="0" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepGrossProfit" Grid.Row="1" Grid.Column="1" Style="{StaticResource Val}" Foreground="#008A00"/>
+                                <TextBlock Text="Gross Loss:" Grid.Row="2" Grid.Column="0" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepGrossLoss" Grid.Row="2" Grid.Column="1" Style="{StaticResource Val}" Foreground="#D9534F"/>
+
+                                <TextBlock Text="Profit Factor:" Grid.Row="0" Grid.Column="3" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepProfitFactor" Grid.Row="0" Grid.Column="4" Style="{StaticResource Val}"/>
+                                <TextBlock Text="Expected Payoff:" Grid.Row="1" Grid.Column="3" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepExpectedPayoff" Grid.Row="1" Grid.Column="4" Style="{StaticResource Val}"/>
+                                <TextBlock Text="Win Rate:" Grid.Row="2" Grid.Column="3" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepWinRate" Grid.Row="2" Grid.Column="4" Style="{StaticResource Val}"/>
+
+                                <TextBlock Text="Total Trades:" Grid.Row="0" Grid.Column="6" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepTotalTrades" Grid.Row="0" Grid.Column="7" Style="{StaticResource Val}"/>
+                                <TextBlock Text="Profit Trades (%):" Grid.Row="1" Grid.Column="6" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepProfitTradesPct" Grid.Row="1" Grid.Column="7" Style="{StaticResource Val}" Foreground="#008A00"/>
+                                <TextBlock Text="Loss Trades (%):" Grid.Row="2" Grid.Column="6" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepLossTradesPct" Grid.Row="2" Grid.Column="7" Style="{StaticResource Val}" Foreground="#D9534F"/>
+
+                                <TextBlock Text="Largest profit trade:" Grid.Row="4" Grid.Column="0" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepLargestProfit" Grid.Row="4" Grid.Column="1" Style="{StaticResource Val}"/>
+                                <TextBlock Text="Largest loss trade:" Grid.Row="5" Grid.Column="0" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepLargestLoss" Grid.Row="5" Grid.Column="1" Style="{StaticResource Val}"/>
+
+                                <TextBlock Text="Max consecutive wins:" Grid.Row="4" Grid.Column="3" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepMaxWinStreak" Grid.Row="4" Grid.Column="4" Style="{StaticResource Val}"/>
+                                <TextBlock Text="Max consecutive losses:" Grid.Row="5" Grid.Column="3" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepMaxLossStreak" Grid.Row="5" Grid.Column="4" Style="{StaticResource Val}"/>
+
+                                <TextBlock Text="Long Trades (won %):" Grid.Row="4" Grid.Column="6" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepLongTradesPct" Grid.Row="4" Grid.Column="7" Style="{StaticResource Val}"/>
+                                <TextBlock Text="Short Trades (won %):" Grid.Row="5" Grid.Column="6" Style="{StaticResource Lbl}"/>
+                                <TextBlock x:Name="RepShortTradesPct" Grid.Row="5" Grid.Column="7" Style="{StaticResource Val}"/>
+                            </Grid>
+                        </Border>
+
+                        <Grid Height="250">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ScottPlot:WpfPlot x:Name="RepEntriesByHourPlot" Grid.Column="0" Margin="0,0,5,0" />
+                            <ScottPlot:WpfPlot x:Name="RepProfitByWeekdayPlot" Grid.Column="1" Margin="5,0,5,0" />
+                            <ScottPlot:WpfPlot x:Name="RepEntriesByMonthPlot" Grid.Column="2" Margin="5,0,0,0" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="WFA Cluster Matrix" x:Name="ClusterTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12">
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <StackPanel Orientation="Vertical" Width="420">
+                                <TextBlock Text="Windows to test (comma separated):" Foreground="#666" Margin="0,0,4,2" />
+                                <TextBox x:Name="MatrixWindowsTextBox" Text="3,5,7,10" />
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical" Width="420" Margin="12,0,0,0">
+                                <TextBlock Text="IS % to test (comma separated):" Foreground="#666" Margin="0,0,4,2" />
+                                <TextBox x:Name="MatrixIsPercentTextBox" Text="30,40,50,60,70" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Button x:Name="StartClusterMatrixButton" Content="Run Cluster Analysis" Width="180" Height="34" HorizontalAlignment="Left" Click="StartClusterMatrixButton_Click" Margin="0,0,0,12" />
+                        <DataGrid x:Name="ClusterMatrixGrid" AutoGenerateColumns="True" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,12">
+                            <!-- Row background will be set programmatically for heatmap effect -->
+                        </DataGrid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="1" Margin="0,12,0,0">
+            <ProgressBar x:Name="FetchProgressBar" Height="4" Margin="0,0,0,8" IsIndeterminate="True" Visibility="Collapsed" Foreground="#0078D7" Background="#E0E0E0" BorderThickness="0" />
+            
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusMessageText" MinWidth="250" Foreground="#444444" Visibility="Collapsed" Text="" />
+                    <ProgressBar x:Name="LoadingProgressBar" Height="8" Margin="0,4,0,0" MinWidth="250" Minimum="0" Maximum="100" Value="0" IsIndeterminate="False" Visibility="Collapsed" Foreground="#0078D7" Background="#E0E0E0" BorderThickness="0" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button x:Name="LoadMt5ReportButton" Content="Load MT5 Report" Click="LoadMt5ReportButton_Click" Height="36" Width="130" FontSize="13" FontWeight="SemiBold" Background="#F0F0F0" Foreground="#333" BorderBrush="#CCC" Cursor="Hand" />
+                    
+                    <Button x:Name="StartStandardOptButton" Content="Start Standard Optimization" Click="StartStandardOptButton_Click" Height="36" Margin="12,0,0,0" Padding="16,0" FontSize="13" FontWeight="SemiBold" Background="#008A00" Foreground="White" BorderBrush="#007200" Cursor="Hand" />
+                    
+                    <Button x:Name="StartBacktestButton" Content="Start WFA Backtest" Click="StartBacktestButton_Click" Height="36" Margin="12,0,0,0" Padding="16,0" FontSize="13" FontWeight="SemiBold" Background="#0078D7" Foreground="White" BorderBrush="#005A9E" Cursor="Hand" />
+                    
+                    <Button x:Name="StopButton" Content="Stop" Click="StopButton_Click" Height="36" Width="80" Margin="12,0,0,0" FontSize="13" FontWeight="SemiBold" Background="#D9534F" Foreground="White" BorderBrush="#A94442" Cursor="Hand" IsEnabled="False" />
+                </StackPanel>
+            </DockPanel>
+        </StackPanel>
+    </Grid>
+</Window>

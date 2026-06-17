@@ -1,0 +1,20 @@
+uygulamada istekdilerimiz
+backtest ayri bir sey optimzasyon ayri lutfen bu ikisini ayiracak kodu yazsin  
+mt5 backtest sonuclarini aldigi zaman bunun farkli sekilde analizler
+eger optimizasyon yapacaksak bunu sisteme verilmis farkli wfa veya optimizsayon sekilleriyle optimize edilmesi ve sonuclarin farkli sekillerde analiz edilmesi
+eger sadece verilen inputarla backtest yapilmak isteniyorsa backtestin yapilmasi ve ayni sekilde yine analizlerinin yapilmasi
+
+
+
+EKSIKLERI:
+    analizler icin bizim kattigimiz bir sey olmali formul vs 
+    wfa windowlarini kullanici ayarlayabilmeli 
+    wfa icin kullanici istedigi tarih araligini secebilmeli is ve oos olarak kaydirmali olarka kendisi verebilmeli
+    
+
+
+    Dağılım Grafiği (Scatter Plot): Genetik algoritmanın denediği binlerce parametre sonucunu MT5 optimizasyon ekranındaki gibi yeşil/kırmızı noktalar halinde gösteren grafik eklendi.
+
+
+
+
